@@ -12,6 +12,14 @@
     "babelify": "^6.0.1",
     "browserify": "^9.0.7",
     "livereactload": "^0.3.0",
+    "react-bootstrap": "^0.20.1",
+    "react-google-maps": "^0.2.5",
+    "react-googlemaps": "^0.4.0",
+    "reactify": "^1.1.0",
     "watchify": "^3.1.0"
+  },
+  "dependencies": {
+    "react": "^0.13.1",
+    "react-select": "^0.4.5"
   }
 }
