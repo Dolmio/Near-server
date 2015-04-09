@@ -1,9 +1,13 @@
 var express = require('express');
+require("node-jsx").install();
 var app = express();
 var path = require('path');
+var React = require('react/addons');
+var ReactApp = React.createFactory(require('./site').ReactApp);
 
 app.get('/', function (req, res) {
-  res.sendfile(__dirname + '/static/index.html');
+  var reactHtml = React.renderToString(ReactApp({}));
+  res.render('index.ejs', {reactOutput: reactHtml});
 });
 
 app.use(express.static(path.join(__dirname, 'static')));

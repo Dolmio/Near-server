@@ -1,6 +1,11 @@
 var React = require('react');
 var Select = require('react-select');
-var {Row , Col, TabbedArea, TabPane} = require('react-bootstrap');
+var RB = require('react-bootstrap');
+var Row = RB.Row;
+var Col = RB.Col;
+var TabbedArea = RB.TabbedArea;
+var TabPane = RB.TabPane
+
 
 var options = [
   { value: 'one', label: 'One' },
@@ -40,7 +45,7 @@ var ExampleGoogleMap = React.createClass({
 });
 
 
-var Navigation = React.createClass({
+var ReactApp = React.createClass({
   render: function () {
     return (
       <div className="container">
@@ -72,10 +77,4 @@ var PlacesView = React.createClass({
   }
 });
 
-
-
-
-
-React.render(
-  <Navigation/> ,document.getElementById("map")
-);
+module.exports.ReactApp = ReactApp;
