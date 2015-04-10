@@ -86,7 +86,22 @@ app.put('/city', function(req,res) {
       .then(function(doc) {
         console.log("Updated: " + util.inspect(doc));
         res.sendStatus(200);
-      });
+      }).done();
+  }
+});
+
+app.delete('/city', function(req,res) {
+  req.checkBody('_id', '_id cant be empty').notEmpty();
+  var validationErrors = req.validationErrors();
+  if(validationErrors) {
+    res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
+  }
+  else {
+    db.collection('cities').remove({_id: pmongo.ObjectId(req.body._id)})
+      .then(function() {
+        console.log("Removed: " + util.inspect(req.body));
+        res.sendStatus(200);
+    }).done();
   }
 });
 

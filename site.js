@@ -8,6 +8,7 @@ var TabbedArea = RB.TabbedArea;
 var TabPane = RB.TabPane;
 var Table = RB.Table;
 var Input = RB.Input;
+var Button = RB.Button;
 var Store = require('./store');
 
 var options = [
@@ -17,26 +18,31 @@ var options = [
 
 var ExampleGoogleMap = React.createClass({
 
-  componentDidMount: function (rootNode) {
-    var mapOptions = {
-        center: this.mapCenterLatLng(),
-        zoom: this.props.initialZoom || 20
-      },
-      map = new google.maps.Map(this.getDOMNode(), mapOptions);
+  getDefaultProps: function() {
+    return {
+      markers: [],
+      center: {latitude : 50, longitude: 50},
+      zoom: 10
+
+    };
+  },
+
+  componentDidMount: function () {
+    var mapOptions =  R.assoc('center', new google.maps.LatLng(this.props.center.latitude, this.props.center.longitude), this.props);
+    var map = new google.maps.Map(this.getDOMNode(),mapOptions);
     this.props.markers.forEach(function(marker) {
       new google.maps.Marker({position: new google.maps.LatLng(marker.latitude, marker.longitude), title: marker.name, map: map});
     });
     this.setState({map: map});
   },
-  mapCenterLatLng: function () {
-    var defaultLatLng = {latitude : 50, longitude: 50};
-    var latLng = R.isEmpty(this.props.markers) ? defaultLatLng : R.head(this.props.markers);
-    return new google.maps.LatLng(latLng.latitude, latLng.longitude);
+
+  componentWillReceiveProps: function(nextProps) {
+    this.state.map.setCenter(new google.maps.LatLng(nextProps.center.latitude, nextProps.center.longitude));
   },
+
   render: function () {
     return (
       <div className='map-gic'></div>
-
     );
   }
 });
@@ -85,12 +91,10 @@ var CitiesView = React.createClass({
 
   citySelected: function(city) {
       this.setState(R.merge(this.state, {showCitiesForm: true, formData: R.merge(city, {type: "update"})}));
-      console.log(city);
   },
 
   render: function() {
     var cities = this.props.cities;
-
     return (<div>
       <Table striped bordered condensed hover>
         <thead>
@@ -113,7 +117,7 @@ var CitiesView = React.createClass({
       </Table>
      <div><button onClick={this.addCityClickHandler}className="btn btn-success"><span className="glyphicon glyphicon-plus"></span></button></div>
     {this.state.showCitiesForm ? React.createElement(CitiesForm, this.state.formData) :  ""}
-      <ExampleGoogleMap markers={cities}/>
+      <ExampleGoogleMap markers={cities} center={this.state.formData}/>
     </div>
     )
     ;
@@ -130,7 +134,6 @@ var CitiesForm = React.createClass({
     else {
       Store.updateCity(this.state);
     }
-
     e.preventDefault();
   },
 
@@ -150,6 +153,15 @@ var CitiesForm = React.createClass({
   handleChange: function(e) {
     this.setState(R.merge(this.state, R.assoc(e.target.dataset.name, e.target.value, {})));
   },
+
+  handleDelete: function() {
+    Store.deleteCity(this.state);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    this.setState(nextProps);
+  },
+
   render: function() {
     return (
       <form onSubmit={this.handleSubmit}>
@@ -157,7 +169,10 @@ var CitiesForm = React.createClass({
         <Input type='text' data-name="name" onChange={this.handleChange} value={this.state.name} label='Name' placeholder='Enter the name of the city'/>
         <Input type='text' data-name="latitude" onChange={this.handleChange} value={this.state.latitude} label='Latitude' placeholder='Enter the latitude of the city'/>
         <Input type='text' data-name="longitude" onChange={this.handleChange} value={this.state.longitude} label='Longitude' placeholder='Enter the longitude of the city'/>
-        <Input type='submit' value='Save' />
+        <Button type='submit' bsStyle="success">Save</Button>
+        {this.state.type == "update" ? <Button bsStyle='danger' onClick={this.handleDelete}>Delete</Button> : ""}
+
+
       </form>
     )
   }
