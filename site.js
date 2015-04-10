@@ -124,12 +124,11 @@ var CitiesView = React.createClass({
 var CitiesForm = React.createClass({
 
   handleSubmit: function(e) {
-    var formData = this.getFormData();
     if(this.props.type == "add") {
-      Store.createCity(formData);
+      Store.createCity(this.state);
     }
     else {
-      Store.updateCity(formData);
+      Store.updateCity(this.state);
     }
 
     e.preventDefault();
@@ -148,24 +147,16 @@ var CitiesForm = React.createClass({
     return this.props;
   },
 
-  getFormData: function() {
-    return {_id : this.refs._id.getInputDOMNode().value,
-            name: this.refs.name.getInputDOMNode().value,
-            latitude: this.refs.latitude.getInputDOMNode().value,
-            longitude: this.refs.longitude.getInputDOMNode().value
-    }
-  },
-
   handleChange: function(e) {
     this.setState(R.merge(this.state, R.assoc(e.target.dataset.name, e.target.value, {})));
   },
   render: function() {
     return (
       <form onSubmit={this.handleSubmit}>
-        <Input type='hidden' value={this.props._id} ref="_id"/>
-        <Input type='text' data-name="name" onChange={this.handleChange} value={this.state.name} label='Name' placeholder='Enter the name of the city' ref="name"/>
-        <Input type='text' data-name="latitude" onChange={this.handleChange} value={this.state.latitude} label='Latitude' placeholder='Enter the latitude of the city' ref="latitude"/>
-        <Input type='text' data-name="longitude" onChange={this.handleChange} value={this.state.longitude} label='Longitude' placeholder='Enter the longitude of the city' ref="longitude"/>
+        <Input type='hidden' value={this.props._id}/>
+        <Input type='text' data-name="name" onChange={this.handleChange} value={this.state.name} label='Name' placeholder='Enter the name of the city'/>
+        <Input type='text' data-name="latitude" onChange={this.handleChange} value={this.state.latitude} label='Latitude' placeholder='Enter the latitude of the city'/>
+        <Input type='text' data-name="longitude" onChange={this.handleChange} value={this.state.longitude} label='Longitude' placeholder='Enter the longitude of the city'/>
         <Input type='submit' value='Save' />
       </form>
     )
