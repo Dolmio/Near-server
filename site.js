@@ -7,7 +7,8 @@ var Col = RB.Col;
 var TabbedArea = RB.TabbedArea;
 var TabPane = RB.TabPane;
 var Table = RB.Table;
-
+var Input = RB.Input;
+var Store = require('./store');
 
 var options = [
   { value: 'one', label: 'One' },
@@ -45,6 +46,18 @@ var ExampleGoogleMap = React.createClass({
 
 
 var ReactApp = React.createClass({
+  componentDidMount: function() {
+    var component = this;
+    this.props.stateStream.onValue(function(state){
+        component.setState(state);
+      }
+    );
+  },
+
+  getInitialState: function() {
+    return this.props.initialState;
+  },
+
   render: function () {
     return (
       <div className="container">
@@ -52,7 +65,7 @@ var ReactApp = React.createClass({
           <Col>
             <h1>Near_ Admin</h1>
             <TabbedArea defaultActiveKey={2}>
-              <TabPane eventKey={1} tab='Cities'><CitiesView cities={this.props.cities} /></TabPane>
+              <TabPane eventKey={1} tab='Cities'><CitiesView cities={this.state.cities} /></TabPane>
               <TabPane eventKey={2} tab='Places'><PlacesView/></TabPane>
             </TabbedArea>
 
@@ -66,10 +79,20 @@ var ReactApp = React.createClass({
 
 var CitiesView = React.createClass({
 
+  getInitialState: function() {
+    return {};
+  },
+
+  addCityClickHandler: function() {
+    this.setState(R.merge(this.state, {showCitiesForm: true}));
+  },
+
   render: function() {
     var cities = this.props.cities;
     return (<div>
     {citiesTable(cities)}
+     <div><button onClick={this.addCityClickHandler}className="btn btn-success"><span className="glyphicon glyphicon-plus"></span></button></div>
+    {this.state.showCitiesForm ? React.createElement(CitiesForm) :  ""}
       <ExampleGoogleMap markers={cities}/>
     </div>
     )
@@ -77,6 +100,32 @@ var CitiesView = React.createClass({
   }
 });
 
+
+var CitiesForm = React.createClass({
+
+  handleSubmit: function(e) {
+    Store.createCity(this.getFormData());
+    e.preventDefault();
+  },
+
+  getFormData: function() {
+    return {name: this.refs.name.getInputDOMNode().value,
+            latitude: this.refs.latitude.getInputDOMNode().value,
+            longitude: this.refs.longitude.getInputDOMNode().value
+    }
+  },
+  render: function() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <Input type='text' label='Name' placeholder='Enter the name of the city' ref="name"/>
+        <Input type='text' label='Latitude' placeholder='Enter the latitude of the city' ref="latitude"/>
+        <Input type='text' label='Longitude' placeholder='Enter the longitude of the city' ref="longitude"/>
+        <Input type='submit' value='Save' />
+      </form>
+    )
+  }
+
+});
 
 function citiesTable(cities){
   return (

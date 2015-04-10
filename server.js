@@ -18,8 +18,7 @@ var db = pmongo('near');
 
 app.get('/', function (req, res) {
   getCities().then(function(cities) {
-    console.log(cities);
-    var reactHtml = React.renderToString(ReactApp({cities: cities}));
+    var reactHtml = React.renderToString(ReactApp({initialState: {cities: cities}}));
 
     res.render('index.ejs', {reactOutput: reactHtml, state: JSON.stringify({cities: cities})});
   }).done();
@@ -39,7 +38,6 @@ app.get('/cities', function(req, res) {
 });
 
 app.post('/city', function(req, res) {
-
   req.checkBody('name', 'Name cant be empty').notEmpty();
   req.checkBody('latitude', 'latitude must be number').notEmpty().isFloat();
   req.checkBody('longitude', 'longitude must be number').notEmpty().isFloat();
@@ -50,6 +48,7 @@ app.post('/city', function(req, res) {
   }
   else {
     db.collection("cities").save(req.body).then(function() {
+      console.log("Inserted: " + util.inspect(req.body));
       res.sendStatus(200);
     }).done();
 
