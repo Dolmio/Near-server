@@ -38,26 +38,57 @@ app.get('/cities', function(req, res) {
 });
 
 app.post('/city', function(req, res) {
+
+  addCommonCityValidations(req);
+  var validationErrors = req.validationErrors();
+  if(validationErrors) {
+    res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
+  }
+  else {
+    db.collection("cities").save({
+      name: req.body.name,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude
+    })
+      .then(function() {
+        console.log("Inserted: " + util.inspect(req.body));
+        res.sendStatus(200);
+    }).done();
+
+  }
+});
+
+function addCommonCityValidations(req) {
   req.checkBody('name', 'Name cant be empty').notEmpty();
   req.checkBody('latitude', 'latitude must be number').notEmpty().isFloat();
   req.checkBody('longitude', 'longitude must be number').notEmpty().isFloat();
+}
+
+app.put('/city', function(req,res) {
+
+  addCommonCityValidations(req);
+  req.checkBody('_id', '_id cant be empty').notEmpty();
 
   var validationErrors = req.validationErrors();
   if(validationErrors) {
     res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
   }
   else {
-    db.collection("cities").save(req.body).then(function() {
-      console.log("Inserted: " + util.inspect(req.body));
-      res.sendStatus(200);
-    }).done();
-
+    db.collection('cities').findAndModify({
+      query: { _id: pmongo.ObjectId(req.body._id) },
+      update: { $set: {
+        name: req.body.name,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude
+      }},
+      new: true
+    })
+      .then(function(doc) {
+        console.log("Updated: " + util.inspect(doc));
+        res.sendStatus(200);
+      });
   }
 });
-
-
-
-
 
 var server = app.listen(3000, function () {
   var host = server.address().address;

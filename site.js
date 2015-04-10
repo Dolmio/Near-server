@@ -15,9 +15,6 @@ var options = [
   { value: 'two', label: 'Two' }
 ];
 
-
-
-
 var ExampleGoogleMap = React.createClass({
 
   componentDidMount: function (rootNode) {
@@ -43,7 +40,6 @@ var ExampleGoogleMap = React.createClass({
     );
   }
 });
-
 
 var ReactApp = React.createClass({
   componentDidMount: function() {
@@ -84,15 +80,39 @@ var CitiesView = React.createClass({
   },
 
   addCityClickHandler: function() {
-    this.setState(R.merge(this.state, {showCitiesForm: true}));
+    this.setState(R.merge(this.state, {showCitiesForm: true, formData: {type: "add"}}));
+  },
+
+  citySelected: function(city) {
+      this.setState(R.merge(this.state, {showCitiesForm: true, formData: R.merge(city, {type: "update"})}));
+      console.log(city);
   },
 
   render: function() {
     var cities = this.props.cities;
+
     return (<div>
-    {citiesTable(cities)}
+      <Table striped bordered condensed hover>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+          </tr>
+        </thead>
+        <tbody>
+      {cities.map(function(city) {
+        return (
+          <tr key={city._id} onClick={this.citySelected.bind(this, city)}>
+            <td>{city.name}</td>
+            <td>{city.latitude}</td>
+            <td>{city.longitude}</td>
+          </tr>)
+      }.bind(this))}
+        </tbody>
+      </Table>
      <div><button onClick={this.addCityClickHandler}className="btn btn-success"><span className="glyphicon glyphicon-plus"></span></button></div>
-    {this.state.showCitiesForm ? React.createElement(CitiesForm) :  ""}
+    {this.state.showCitiesForm ? React.createElement(CitiesForm, this.state.formData) :  ""}
       <ExampleGoogleMap markers={cities}/>
     </div>
     )
@@ -104,53 +124,54 @@ var CitiesView = React.createClass({
 var CitiesForm = React.createClass({
 
   handleSubmit: function(e) {
-    Store.createCity(this.getFormData());
+    var formData = this.getFormData();
+    if(this.props.type == "add") {
+      Store.createCity(formData);
+    }
+    else {
+      Store.updateCity(formData);
+    }
+
     e.preventDefault();
   },
 
+  getDefaultProps: function() {
+    return {
+      name: '',
+      latitude: '',
+      longitude:'',
+      _id: ''
+    };
+  },
+
+  getInitialState: function() {
+    return this.props;
+  },
+
   getFormData: function() {
-    return {name: this.refs.name.getInputDOMNode().value,
+    return {_id : this.refs._id.getInputDOMNode().value,
+            name: this.refs.name.getInputDOMNode().value,
             latitude: this.refs.latitude.getInputDOMNode().value,
             longitude: this.refs.longitude.getInputDOMNode().value
     }
   },
+
+  handleChange: function(e) {
+    this.setState(R.merge(this.state, R.assoc(e.target.dataset.name, e.target.value, {})));
+  },
   render: function() {
     return (
       <form onSubmit={this.handleSubmit}>
-        <Input type='text' label='Name' placeholder='Enter the name of the city' ref="name"/>
-        <Input type='text' label='Latitude' placeholder='Enter the latitude of the city' ref="latitude"/>
-        <Input type='text' label='Longitude' placeholder='Enter the longitude of the city' ref="longitude"/>
+        <Input type='hidden' value={this.props._id} ref="_id"/>
+        <Input type='text' data-name="name" onChange={this.handleChange} value={this.state.name} label='Name' placeholder='Enter the name of the city' ref="name"/>
+        <Input type='text' data-name="latitude" onChange={this.handleChange} value={this.state.latitude} label='Latitude' placeholder='Enter the latitude of the city' ref="latitude"/>
+        <Input type='text' data-name="longitude" onChange={this.handleChange} value={this.state.longitude} label='Longitude' placeholder='Enter the longitude of the city' ref="longitude"/>
         <Input type='submit' value='Save' />
       </form>
     )
   }
 
 });
-
-function citiesTable(cities){
-  return (
-  <Table striped bordered condensed hover>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Latitude</th>
-        <th>Longitude</th>
-      </tr>
-    </thead>
-    <tbody>
-      {cities.map(function(city) { 
-      return (
-      <tr key={city._id}>
-
-        <td>{city.name}</td>
-        <td>{city.latitude}</td>
-        <td>{city.longitude}</td>
-      </tr>)})}
-    </tbody>
-  </Table>
-)};
-
-
 
 var PlacesView = React.createClass({
   render: function() {

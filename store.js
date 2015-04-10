@@ -3,15 +3,21 @@ Bacon.$ =  require("bacon.jquery");
 
 var citiesStream = new Bacon.Bus();
 
-module.exports = {
+function upsertCity(type) {
 
-  createCity: function(city) {
-    var cityCreation = Bacon.$.ajax({ url: "/city", data: JSON.stringify(city), type:"post", contentType: "application/json"});
+  return function(city) {
+    var cityUpsert = Bacon.$.ajax({ url: "/city", data: JSON.stringify(city), type:type, contentType: "application/json"});
 
-    citiesStream.plug(cityCreation.flatMap(function() {
+    citiesStream.plug(cityUpsert.flatMap(function() {
       return Bacon.$.ajax({ url: "/cities"});
     }));
-  },
-
-  citiesStream : citiesStream
+  }
 }
+
+
+module.exports = {
+
+  createCity: upsertCity('post'),
+  updateCity: upsertCity('put'),
+  citiesStream : citiesStream
+};
