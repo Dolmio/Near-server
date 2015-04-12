@@ -8,7 +8,11 @@ var bodyParser = require('body-parser');
 var expressValidator = require('express-validator');
 var util = require("util");
 app.use(bodyParser.json());
-app.use(expressValidator());
+app.use(expressValidator({
+  customValidators: {
+    isObjectId: isValidObjectId
+  }
+}));
 app.use(express.static(path.join(__dirname, 'static')));
 var pmongo = require('promised-mongo');
 var db = pmongo('near');
@@ -67,7 +71,7 @@ function addCommonCityValidations(req) {
 app.put('/city', function(req,res) {
 
   addCommonCityValidations(req);
-  req.checkBody('_id', '_id cant be empty').notEmpty();
+  req.checkBody('_id', '_id has to be objectId').isObjectId();
 
   var validationErrors = req.validationErrors();
   if(validationErrors) {
@@ -91,19 +95,125 @@ app.put('/city', function(req,res) {
 });
 
 app.delete('/city', function(req,res) {
-  req.checkBody('_id', '_id cant be empty').notEmpty();
+  removeFromCollection(req, res, "cities");
+});
+
+
+function addCommonPlaceValidations(req) {
+  req.checkBody('name', 'Name cant be empty').notEmpty();
+  req.checkBody('description', 'Description cant be empty').notEmpty();
+  req.checkBody('city', 'city must be objectId').notEmpty().isObjectId();
+  req.checkBody('radius', 'radius must be number').notEmpty().isFloat();
+  req.checkBody('latitude', 'latitude must be number').notEmpty().isFloat();
+  req.checkBody('longitude', 'longitude must be number').notEmpty().isFloat();
+}
+
+app.post('/place', function(req, res) {
+
+  addCommonPlaceValidations(req);
   var validationErrors = req.validationErrors();
   if(validationErrors) {
     res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
   }
   else {
-    db.collection('cities').remove({_id: pmongo.ObjectId(req.body._id)})
+    var cityId = pmongo.ObjectId(req.body.city);
+
+    db.collection('cities').findOne({_id: cityId}).then(function(res) {
+      if(res == null) {
+        res.send('City id should exists: ', 400);
+      }
+      else {
+        return savePlace();
+      }
+
+    }).done();
+
+    function savePlace() {
+      return db.collection("places").save({
+        name: req.body.name,
+        description: req.body.description,
+        city: cityId,
+        radius: req.body.radius,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude
+      })
+        .then(function() {
+          console.log("Inserted: " + util.inspect(req.body));
+          res.sendStatus(200);
+        });
+    }
+
+
+  }
+});
+
+function getPlaces() {
+  return db.collection("places").find().toArray();
+}
+
+app.get('/places', function(req, res) {
+  getPlaces().then(function(cities) {
+    res.json(cities);
+
+  }).done();
+});
+
+app.delete('/place', function(req,res) {
+  removeFromCollection(req, res, "places");
+});
+
+app.put('/place', function(req,res) {
+
+  addCommonPlaceValidations(req);
+  req.checkBody('_id', '_id has to be objectId').isObjectId();
+
+  var validationErrors = req.validationErrors();
+  if(validationErrors) {
+    res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
+  }
+  else {
+    db.collection('places').findAndModify({
+      query: { _id: pmongo.ObjectId(req.body._id) },
+      update: { $set: {
+        name: req.body.name,
+        description: req.body.description,
+        city: pmongo.ObjectId(req.body.city),
+        radius: req.body.radius,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude
+      }},
+      new: true
+    })
+      .then(function(doc) {
+        console.log("Updated: " + util.inspect(doc));
+        res.sendStatus(200);
+      }).done();
+  }
+});
+
+function removeFromCollection(req, res, collection) {
+  req.checkBody('_id', '_id has to be objectId').isObjectId();
+  var validationErrors = req.validationErrors();
+  if(validationErrors) {
+    res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
+  }
+  else {
+    db.collection(collection).remove({_id: pmongo.ObjectId(req.body._id)})
       .then(function() {
         console.log("Removed: " + util.inspect(req.body));
         res.sendStatus(200);
-    }).done();
+      }).done();
   }
-});
+}
+
+function isValidObjectId(id) {
+  try{
+    pmongo.ObjectId(id);
+    return true;
+  }catch(err) {
+    return false;
+  }
+}
 
 var server = app.listen(3000, function () {
   var host = server.address().address;
