@@ -11,11 +11,6 @@ var Input = RB.Input;
 var Button = RB.Button;
 var Store = require('./store');
 
-var options = [
-  { value: 'one', label: 'One' },
-  { value: 'two', label: 'Two' }
-];
-
 var ExampleGoogleMap = React.createClass({
 
   getDefaultProps: function() {
@@ -51,6 +46,8 @@ var ReactApp = React.createClass({
   componentDidMount: function() {
     var component = this;
     this.props.stateStream.onValue(function(state){
+        console.log("state updated")
+        console.log(state)
         component.setState(state);
       }
     );
@@ -86,11 +83,11 @@ var CitiesView = React.createClass({
   },
 
   addCityClickHandler: function() {
-    this.setState(R.merge(this.state, {showCitiesForm: true, formData: {type: "add"}}));
+    this.setState(R.merge(this.state, {showForm: true, formData: {type: "add"}}));
   },
 
   citySelected: function(city) {
-      this.setState(R.merge(this.state, {showCitiesForm: true, formData: R.merge(city, {type: "update"})}));
+      this.setState(R.merge(this.state, {showForm: true, formData: R.merge(city, {type: "update"})}));
   },
 
   render: function() {
@@ -116,7 +113,7 @@ var CitiesView = React.createClass({
         </tbody>
       </Table>
      <div><button onClick={this.addCityClickHandler}className="btn btn-success"><span className="glyphicon glyphicon-plus"></span></button></div>
-    {this.state.showCitiesForm ? React.createElement(CitiesForm, this.state.formData) :  ""}
+    {this.state.showForm ? React.createElement(CitiesForm, this.state.formData) :  ""}
       <ExampleGoogleMap markers={cities} center={this.state.formData}/>
     </div>
     )
@@ -195,9 +192,18 @@ var PlacesView = React.createClass({
     this.setState(R.merge(this.state, {selectedCity: val}));
   },
 
-  render: function() {
+  addPlaceClickHandler: function() {
+    this.setState(R.merge(this.state, {showForm: true, formData: {type: "add"}}));
+  },
 
-    var places = this.state.places.filter(function(place) {
+  placeSelected: function(city) {
+    this.setState(R.merge(this.state, {showForm: true, formData: R.merge(city, {type: "update"})}));
+  },
+
+  render: function() {
+    console.log("jou")
+    console.log(this.props.places);
+    var places = this.props.places.filter(function(place) {
       if(this.state.selectedCity) {
         return place.city == this.state.selectedCity;
       }
@@ -210,6 +216,7 @@ var PlacesView = React.createClass({
         name="form-field-name"
         options={this.selectOptions(this.props.cities)}
         onChange={this.selectChangeHandler}
+        value={this.state.selectedCity}
       />
 
       <Table striped bordered condensed hover>
@@ -225,7 +232,7 @@ var PlacesView = React.createClass({
         <tbody>
       {places.map(function(place) {
         return (
-          <tr key={place._id}>
+          <tr key={place._id} onClick={this.placeSelected.bind(this, place)}>
             <td>{place.name}</td>
             <td>{place.description}</td>
             <td>{place.radius}</td>
@@ -235,10 +242,74 @@ var PlacesView = React.createClass({
       }.bind(this))}
         </tbody>
       </Table>
+      <div><button onClick={this.addPlaceClickHandler}className="btn btn-success"><span className="glyphicon glyphicon-plus"></span></button></div>
+     {this.state.showForm ? React.createElement(PlaceForm, R.merge(this.state.formData, {city: this.state.selectedCity})) :  ""}
+
+
     </div>
     )
       ;
   }
 });
+
+var PlaceForm = React.createClass({
+
+  handleSubmit: function(e) {
+    if(this.props.type == "add") {
+      Store.createPlace(this.state);
+    }
+    else {
+      Store.updatePlace(this.state);
+    }
+    e.preventDefault();
+  },
+
+  getDefaultProps: function() {
+    return {
+      name: '',
+      description: '',
+      radius: '',
+      city: '',
+      latitude: '',
+      longitude:'',
+      _id: ''
+    };
+  },
+
+  getInitialState: function() {
+    return this.props;
+  },
+
+  handleChange: function(e) {
+    this.setState(R.merge(this.state, R.assoc(e.target.dataset.name, e.target.value, {})));
+  },
+
+  handleDelete: function() {
+    Store.deletePlace(this.state);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    this.setState(nextProps);
+  },
+
+  render: function() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <Input type='hidden' value={this.props._id}/>
+        <Input type='hidden' value={this.props.city}/>
+        <Input type='text' data-name="name" onChange={this.handleChange} value={this.state.name} label='Name' placeholder='Enter the name of the place'/>
+        <Input type='text' data-name="description" onChange={this.handleChange} value={this.state.description} label='Description' placeholder='Enter short description of the place'/>
+        <Input type='text' data-name="radius" onChange={this.handleChange} value={this.state.radius} label='Radius' placeholder='Enter the radius of the place'/>
+
+        <Input type='text' data-name="latitude" onChange={this.handleChange} value={this.state.latitude} label='Latitude' placeholder='Enter the latitude of the place'/>
+        <Input type='text' data-name="longitude" onChange={this.handleChange} value={this.state.longitude} label='Longitude' placeholder='Enter the longitude of the place'/>
+        <Button type='submit' bsStyle="success" disabled={this.props.city == ""}>Save</Button>
+        {this.state.type == "update" ? <Button bsStyle='danger' onClick={this.handleDelete}>Delete</Button> : ""}
+      </form>
+    )
+  }
+
+});
+
 
 module.exports.ReactApp = ReactApp;

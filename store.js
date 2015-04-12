@@ -19,11 +19,29 @@ function getCitiesAfter(stream) {
   }));
 }
 
+function getPlacesAfter(stream) {
+  placesStream.plug(stream.flatMap(function() {
+    return Bacon.$.ajax({ url: "/places"});
+  }));
+}
+
+
+function upsertPlace(type) {
+  return function(city) {
+    var placeUpsert = Bacon.$.ajax({ url: "/place", data: JSON.stringify(city), type:type, contentType: "application/json"});
+    getPlacesAfter(placeUpsert);
+
+  }
+}
+
 module.exports = {
 
   createCity: upsertCity('post'),
   updateCity: upsertCity('put'),
   deleteCity: upsertCity('delete'),
+  createPlace: upsertPlace('post'),
+  updatePlace: upsertPlace('put'),
+  deletePlace: upsertPlace('delete'),
   citiesStream : citiesStream,
   placesStream : placesStream
 };
