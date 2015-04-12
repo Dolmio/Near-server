@@ -7,6 +7,7 @@ var ReactApp = React.createFactory(require('./site').ReactApp);
 var bodyParser = require('body-parser');
 var expressValidator = require('express-validator');
 var util = require("util");
+var Promise = require('bluebird');
 app.use(bodyParser.json());
 app.use(expressValidator({
   customValidators: {
@@ -21,11 +22,14 @@ var db = pmongo('near');
 
 
 app.get('/', function (req, res) {
-  getCities().then(function(cities) {
-    var reactHtml = React.renderToString(ReactApp({initialState: {cities: cities}}));
+  Promise.all([getCities(), getPlaces()]).then(function(results) {
+    var cities = results[0];
+    var places = results[1];
+    var state =  {cities: cities, places: places};
+    var reactHtml = React.renderToString(ReactApp({initialState: state}));
 
-    res.render('index.ejs', {reactOutput: reactHtml, state: JSON.stringify({cities: cities})});
-  }).done();
+    res.render('index.ejs', {reactOutput: reactHtml, state: JSON.stringify(state)});
+  }).done()
 
 });
 

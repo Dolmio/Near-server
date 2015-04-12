@@ -2,6 +2,7 @@ var Bacon = require('baconjs');
 Bacon.$ =  require("bacon.jquery");
 
 var citiesStream = new Bacon.Bus();
+var placesStream = new Bacon.Bus();
 
 function upsertCity(type) {
 
@@ -23,5 +24,6 @@ module.exports = {
   createCity: upsertCity('post'),
   updateCity: upsertCity('put'),
   deleteCity: upsertCity('delete'),
-  citiesStream : citiesStream
+  citiesStream : citiesStream,
+  placesStream : placesStream
 };

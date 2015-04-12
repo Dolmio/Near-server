@@ -68,7 +68,7 @@ var ReactApp = React.createClass({
             <h1>Near_ Admin</h1>
             <TabbedArea defaultActiveKey={2}>
               <TabPane eventKey={1} tab='Cities'><CitiesView cities={this.state.cities} /></TabPane>
-              <TabPane eventKey={2} tab='Places'><PlacesView/></TabPane>
+              <TabPane eventKey={2} tab='Places'><PlacesView cities={this.state.cities} places={this.state.places}/></TabPane>
             </TabbedArea>
 
           </Col>
@@ -180,8 +180,64 @@ var CitiesForm = React.createClass({
 });
 
 var PlacesView = React.createClass({
+
+  getInitialState: function() {
+    return this.props;
+  },
+
+  selectOptions: function(cities) {
+    return cities.map(function(city) {
+      return {value: city._id, label: city.name}
+    });
+  },
+
+  selectChangeHandler: function(val) {
+    this.setState(R.merge(this.state, {selectedCity: val}));
+  },
+
   render: function() {
-    return (<h1>Paikat</h1>);
+
+    var places = this.state.places.filter(function(place) {
+      if(this.state.selectedCity) {
+        return place.city == this.state.selectedCity;
+      }
+      return true;
+    }.bind(this));
+
+    return (<div>
+
+      <Select
+        name="form-field-name"
+        options={this.selectOptions(this.props.cities)}
+        onChange={this.selectChangeHandler}
+      />
+
+      <Table striped bordered condensed hover>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Radius</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+          </tr>
+        </thead>
+        <tbody>
+      {places.map(function(place) {
+        return (
+          <tr key={place._id}>
+            <td>{place.name}</td>
+            <td>{place.description}</td>
+            <td>{place.radius}</td>
+            <td>{place.latitude}</td>
+            <td>{place.longitude}</td>
+          </tr>)
+      }.bind(this))}
+        </tbody>
+      </Table>
+    </div>
+    )
+      ;
   }
 });
 
