@@ -16,7 +16,7 @@ app.use(expressValidator({
 }));
 app.use(express.static(path.join(__dirname, 'static')));
 var pmongo = require('promised-mongo');
-var db = pmongo('near');
+var db = pmongo(process.env.MONGOLAB_URI || 'near');
 
 
 
