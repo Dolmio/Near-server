@@ -4,19 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node ./node_modules/browserify/bin/cmd.js main.js -t babelify --outfile static/bundle.js",
+    "start": "node server.js"
   },
   "author": "Juho Salmio <juho.salmio@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "babelify": "^6.0.1",
-    "browserify": "^9.0.7",
     "livereactload": "^0.3.0",
-    "react-bootstrap": "^0.20.1",
-    "reactify": "^1.1.0",
     "watchify": "^3.1.0"
   },
   "dependencies": {
+    "react-bootstrap": "^0.20.1",
+    "reactify": "^1.1.0",
+    "babelify": "^6.0.1",
+    "browserify": "^9.0.7",
     "bacon.jquery": "^0.4.12",
     "bacon.model": "^0.1.12",
     "baconjs": "^0.7.53",
