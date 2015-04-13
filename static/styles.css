@@ -2,7 +2,13 @@
     height: 500px;
     width: 500px
 }
-body{
-    width: 500px;
-    height: 500px;
+.main-container {
+    margin: 20px;
+}
+body {
+    background-color: rgb(236,236,236);
+}
+
+.logo{
+    margin-bottom: 20px;
 }

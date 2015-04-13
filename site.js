@@ -48,8 +48,6 @@ var ReactApp = React.createClass({
   componentDidMount: function() {
     var component = this;
     this.props.stateStream.onValue(function(state){
-        console.log("state updated")
-        console.log(state)
         component.setState(state);
       }
     );
@@ -61,10 +59,10 @@ var ReactApp = React.createClass({
 
   render: function () {
     return (
-      <div className="container">
+      <div className="container main-container">
         <Row>
           <Col>
-            <h1>Near_ Admin</h1>
+            <img className="logo center-block" src="logo_splashscreen.png"/>
             <TabbedArea defaultActiveKey={2}>
               <TabPane eventKey={1} tab='Cities'><CitiesView cities={this.state.cities} /></TabPane>
               <TabPane eventKey={2} tab='Places'><PlacesView cities={this.state.cities} places={this.state.places}/></TabPane>
@@ -203,8 +201,6 @@ var PlacesView = React.createClass({
   },
 
   render: function() {
-    console.log("jou")
-    console.log(this.props.places);
     var places = this.props.places.filter(function(place) {
       if(this.state.selectedCity) {
         return place.city == this.state.selectedCity;
