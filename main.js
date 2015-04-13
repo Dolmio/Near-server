@@ -6,9 +6,11 @@ var globalInitialState = initialState;
 var citiesStream = require('./store').citiesStream;
 var placesStream = require('./store').placesStream;
 
+
 var stateUpdates = Bacon.combineTemplate({
-  cities: citiesStream,
-  places: placesStream
+  cities: Bacon.once(globalInitialState.cities).concat(citiesStream),
+  places: Bacon.once(globalInitialState.places).concat(placesStream)
 });
+
 
 React.render(new ReactApp({stateStream: stateUpdates, initialState: globalInitialState}), mountNode);

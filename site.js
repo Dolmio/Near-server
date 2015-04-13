@@ -32,7 +32,9 @@ var ExampleGoogleMap = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    this.state.map.setCenter(new google.maps.LatLng(nextProps.center.latitude, nextProps.center.longitude));
+    if(this.state) {
+      this.state.map.setCenter(new google.maps.LatLng(nextProps.center.latitude, nextProps.center.longitude));
+    }
   },
 
   render: function () {

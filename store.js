@@ -5,33 +5,34 @@ var citiesStream = new Bacon.Bus();
 var placesStream = new Bacon.Bus();
 
 function upsertCity(type) {
+  return upsertEntity(type, "/city", getCitiesAfter);
+}
 
-  return function(city) {
-    var cityUpsert = Bacon.$.ajax({ url: "/city", data: JSON.stringify(city), type:type, contentType: "application/json"});
-    getCitiesAfter(cityUpsert);
+function getCitiesAfter(stream) {
+  getEntityAfter(stream, citiesStream, "/cities");
+}
+
+function getEntityAfter(stream, bus, url) {
+  bus.plug(stream.flatMap(function() {
+    return Bacon.$.ajax({ url: url});
+  }));
+}
+
+function upsertEntity(type, url, afterFn) {
+  return function(entity) {
+    var entityUpsert = Bacon.$.ajax({ url: url, data: JSON.stringify(entity), type:type, contentType: "application/json"});
+    afterFn(entityUpsert);
 
   }
 }
 
-function getCitiesAfter(stream) {
-  citiesStream.plug(stream.flatMap(function() {
-    return Bacon.$.ajax({ url: "/cities"});
-  }));
-}
-
 function getPlacesAfter(stream) {
-  placesStream.plug(stream.flatMap(function() {
-    return Bacon.$.ajax({ url: "/places"});
-  }));
+  getEntityAfter(stream, placesStream, "/places");
 }
 
 
 function upsertPlace(type) {
-  return function(city) {
-    var placeUpsert = Bacon.$.ajax({ url: "/place", data: JSON.stringify(city), type:type, contentType: "application/json"});
-    getPlacesAfter(placeUpsert);
-
-  }
+  return upsertEntity(type, "/place", getPlacesAfter);
 }
 
 module.exports = {
