@@ -99,7 +99,16 @@ app.put('/city', function(req,res) {
 });
 
 app.delete('/city', function(req,res) {
-  removeFromCollection(req, res, "cities");
+  checkDeleteValidations(req, res);
+  var id =  pmongo.ObjectId(req.body._id);
+  db.collection('places').find({city: id}).toArray().then(function(places) {
+    if(places.length == 0) {
+      removeFromCollection(req, res, "cities", id);
+    }else{
+      res.sendStatus(400);
+    }
+  }).done();
+
 });
 
 
@@ -163,7 +172,8 @@ app.get('/places', function(req, res) {
 });
 
 app.delete('/place', function(req,res) {
-  removeFromCollection(req, res, "places");
+  checkDeleteValidations(req,res);
+  removeFromCollection(req, res, "places", pmongo.ObjectId(req.body._id));
 });
 
 app.put('/place', function(req,res) {
@@ -195,20 +205,22 @@ app.put('/place', function(req,res) {
   }
 });
 
-function removeFromCollection(req, res, collection) {
+function removeFromCollection(req, res, collection, id) {
+  db.collection(collection).remove({_id: id})
+    .then(function() {
+      console.log("Removed: " + util.inspect(req.body));
+      res.sendStatus(200);
+    }).done();
+}
+
+function checkDeleteValidations(req, res) {
   req.checkBody('_id', '_id has to be objectId').isObjectId();
   var validationErrors = req.validationErrors();
   if(validationErrors) {
     res.send('There have been validation errors: ' + util.inspect(validationErrors), 400);
   }
-  else {
-    db.collection(collection).remove({_id: pmongo.ObjectId(req.body._id)})
-      .then(function() {
-        console.log("Removed: " + util.inspect(req.body));
-        res.sendStatus(200);
-      }).done();
-  }
 }
+
 
 function isValidObjectId(id) {
   try{
